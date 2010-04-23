@@ -10,65 +10,77 @@ MadMimiMailer.api_settings = {
 }
 
 class MadMimiMailer
-  self.template_root = File.dirname(__FILE__) + '/templates/'
+  prepend_view_path(File.dirname(__FILE__) + '/templates/')
 
   def mimi_hola(greeting)
-    subject greeting
-    recipients "tyler@obtiva.com"
-    from "dave@obtiva.com"
-    bcc ["Gregg Pollack <gregg@example.com>", "David Clymer <david@example>"]
+    @message = greeting
+    
     promotion "hello"
-    body :message => greeting
+    
+    mail :to => "tyler@obtiva.com",
+         :from => "dave@obtiva.com",
+         :bcc => ["Gregg Pollack <gregg@example.com>", "David Clymer <david@example>"],
+         :subject => greeting
   end
 
   def mimi_hello(greeting)
-    subject greeting
-    recipients "tyler@obtiva.com"
-    from "dave@obtiva.com"
-    bcc ["Gregg Pollack <gregg@example.com>", "David Clymer <david@example>"]
-    body :message => greeting
+    @message = greeting
+    
+    mail :to => "tyler@obtiva.com",
+         :from => "dave@obtiva.com",
+         :bcc => ["Gregg Pollack <gregg@example.com>", "David Clymer <david@example>"],
+         :subject => greeting
   end
 
   def mimi_hello_erb(greeting)
-    subject greeting
-    recipients "tyler@obtiva.com"
-    from "dave@obtiva.com"
+    @message = greeting
+    
     promotion "w00t"
     use_erb true
-    body :message => greeting
+    
+    mail :to => "tyler@obtiva.com",
+         :from => "dave@obtiva.com",
+         :subject => greeting
   end
 
   def mimi_multipart_hello_erb(greeting)
-    subject greeting
-    recipients "sandro@hashrocket.com"
-    from "stephen@hashrocket.com"
+    @message = greeting
+    
     promotion "w00t"
     use_erb true
-    body :message => greeting
+    
+    mail :to => "sandro@hashrocket.com",
+         :from => "stephen@hashrocket.com",
+         :subject => greeting
   end
 
   def mimi_bye_erb(greeting)
-    subject greeting
-    recipients "tyler@obtiva.com"
-    from "dave@obtiva.com"
+    @message = greeting
+    
     promotion "w00t"
     use_erb true
-    body :message => greeting
+    
+    mail :to => "tyler@obtiva.com",
+         :from => "dave@obtiva.com",
+         :subject => greeting
   end
 
   def mimi_hello_sans_bcc(greeting)
-    subject greeting
-    recipients "tyler@obtiva.com"
-    from "dave@obtiva.com"
-    body :message => greeting
+    @message = greeting
+    
+    mail :to => "tyler@obtiva.com",
+         :from => "dave@obtiva.com",
+         :subject => greeting
   end
   
   def mimi_unconfirmed(greeting)
-    subject greeting
-    recipients 'egunderson@obtiva.com'
-    from 'mimi@obtiva.com'
+    @message = greeting
+    
     promotion 'woot'
-    body :message => greeting
     unconfirmed true
+
+    mail :to => 'egunderson@obtiva.com',
+         :from => 'mimi@obtiva.com',
+         :subject => greeting
   end
 end

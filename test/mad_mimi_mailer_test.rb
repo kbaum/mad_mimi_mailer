@@ -22,7 +22,7 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'hidden' =>         nil
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     MadMimiMailer.deliver_mimi_hola("welcome to mad mimi")
   end
 
@@ -40,7 +40,7 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'hidden' =>         nil
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     promotion_attempt_id = MadMimiMailer.deliver_mimi_hello("welcome to mad mimi")
     assert_equal "123435", promotion_attempt_id
   end
@@ -59,10 +59,10 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'hidden' =>         nil
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     MadMimiMailer.deliver_mimi_hello_sans_bcc("welcome to mad mimi")
   end
-
+  
   def test_erb_render
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(
@@ -77,10 +77,10 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'hidden' =>         nil
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     MadMimiMailer.deliver_mimi_hello_erb("welcome to mad mimi")
   end
-
+  
   def test_multipart_erb_render
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(
@@ -96,7 +96,7 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'hidden' =>         nil
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     MadMimiMailer.deliver_mimi_multipart_hello_erb("welcome to mad mimi")
   end
   
@@ -115,66 +115,66 @@ class TestMadMimiMailer < Test::Unit::TestCase
       'unconfirmed' =>    '1'
     )
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     MadMimiMailer.deliver_mimi_unconfirmed("welcome unconfirmed user")
   end
-
-  def test_deliveries_contain_tmail_objects_when_use_erb_in_test_mode
+  
+  def test_deliveries_contain_mail_message_objects_when_use_erb_in_test_mode
     ActionMailer::Base.delivery_method = :test
     MadMimiMailer.deliver_mimi_multipart_hello_erb("welcome to mad mimi")
     ActionMailer::Base.delivery_method = :smtp
-
-    assert ActionMailer::Base.deliveries.all?{|m| m.kind_of?(TMail::Mail)}
+  
+    assert ActionMailer::Base.deliveries.all?{|m| m.kind_of?(Mail::Message)}
   end
-
+  
   def test_erb_render_fails_without_peek_image
     assert_raise MadMimiMailer::ValidationError do
       MadMimiMailer.deliver_mimi_bye_erb("welcome to mad mimi")
     end
   end
-
+  
   def test_bad_promotion_name
     mock_request = mock("request")
     mock_request.stubs(:set_form_data)
     response = Net::HTTPNotFound.new('1.2', '404', 'Not found')
     response.stubs(:body).returns("Could not find promotion by that name")
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(response)
-
+  
     assert_raise(Net::HTTPServerException) do
       MadMimiMailer.deliver_mimi_hello("welcome to mad mimi")
     end
   end
-
+  
   def test_no_more_audience_space
     mock_request = mock("request")
     mock_request.stubs(:set_form_data)
     response = Net::HTTPPaymentRequired.new('1.2', '402', 'Payment required')
     response.stubs(:body).returns("Please upgrade")
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(response)
-
+  
     assert_raise(Net::HTTPServerException) do
       MadMimiMailer.deliver_mimi_hello("welcome to mad mimi")
     end
   end
-
+  
   def test_no_mailer_api_enabled
     mock_request = mock("request")
     mock_request.stubs(:set_form_data)
     response = Net::HTTPUnauthorized.new('1.2', '401', 'Unauthorized')
     response.stubs(:body).returns("Please get an mailer api subscription")
     MadMimiMailer.expects(:post_request).yields(mock_request).returns(response)
-
+  
     assert_raise(Net::HTTPServerException) do
       MadMimiMailer.deliver_mimi_hello("welcome to mad mimi")
     end
   end
-
+  
   def test_assert_mail_sent
     ActionMailer::Base.delivery_method = :test
     MadMimiMailer.deliver_mimi_hello("welcome to mad mimi")
     ActionMailer::Base.delivery_method = :smtp
-
+  
     assert_equal 1, ActionMailer::Base.deliveries.size
-    assert_equal "MadMimiMailer", ActionMailer::Base.deliveries.last.class.name
+    assert_equal "welcome to mad mimi", ActionMailer::Base.deliveries.last.body.to_s
   end
 end

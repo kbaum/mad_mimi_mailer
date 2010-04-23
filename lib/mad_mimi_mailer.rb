@@ -6,6 +6,16 @@ class MadMimiMailer < ActionMailer::Base
   VERSION = '0.0.8'
   SINGLE_SEND_URL = 'https://madmimi.com/mailer'
 
+  InstanceVarsToIgnore = ['action_has_layout',
+                          'view_context_class',
+                          'lookup_context',
+                          'mail_was_called',
+                          'promotion',
+                          'use_erb',
+                          'hidden',
+                          'unconfirmed',
+                          'config']
+
   @@api_settings = {}
   cattr_accessor :api_settings
   
@@ -60,53 +70,54 @@ class MadMimiMailer < ActionMailer::Base
 
     def deliver_mimi_mail(method, *parameters)
       mail = new
-      mail.__send__(method, *parameters)
+      mail.action_name = method
+      message = mail.__send__(method, *parameters)
 
-      if mail.use_erb
-        mail.create!(method, *parameters)
-      end
+      # if mail.use_erb
+      #   mail.create!(method, *parameters)
+      # end
 
       return unless perform_deliveries
 
       if delivery_method == :test
-        deliveries << (mail.mail ? mail.mail : mail)
+        deliveries << message
       else
         if (all_recipients = mail.recipients).is_a? Array
           all_recipients.each do |recipient|
             mail.recipients = recipient
-            call_api!(mail, method)
+            call_api!(mail, message, method)
           end
         else
-          call_api!(mail, method)
+          call_api!(mail, message, method)
         end
       end
     end
 
-    def call_api!(mail, method)
+    def call_api!(mail, message, method)
       params = {
         'username' => api_settings[:username],
         'api_key' =>  api_settings[:api_key],
         'promotion_name' => mail.promotion || method.to_s.sub(/^mimi_/, ''),
-        'recipients' =>     serialize(mail.recipients),
-        'subject' =>        mail.subject,
-        'bcc' =>            serialize(mail.bcc || default_parameters[:bcc]),
-        'from' =>           (mail.from || default_parameters[:from]),
+        'recipients' =>     serialize(message['to'].to_s),
+        'subject' =>        message['subject'].to_s,
+        'bcc' =>            serialize(message['bcc'] ? message['bcc'].to_s : default_parameters[:bcc]),
+        'from' =>           (message['from'] ? message['from'].to_s : default_parameters[:from]),
         'hidden' =>         serialize(mail.hidden)
       }
 
       params['unconfirmed'] = '1' if mail.unconfirmed
 
       if mail.use_erb
-        if mail.parts.any?
-          params['raw_plain_text'] = content_for(mail, "text/plain")
-          params['raw_html'] = content_for(mail, "text/html") { |html| validate(html.body) }
+        if message.parts.any?
+          params['raw_plain_text'] = content_for(message, "text/plain")
+          params['raw_html'] = content_for(message, "text/html") { |html| validate(html.body.to_s) }
         else
-          validate(mail.body)
-          params['raw_html'] = mail.body
+          validate(message.body.to_s)
+          params['raw_html'] = message.body.to_s
         end
       else
         stringified_default_body = (default_parameters[:body] || {}).stringify_keys!
-        stringified_mail_body = (mail.body || {}).stringify_keys!
+        stringified_mail_body = (mail.instance_values.reject{|k| k[0] == '_' || InstanceVarsToIgnore.index(k)})
         body_hash = stringified_default_body.merge(stringified_mail_body)
         params['body'] = body_hash.to_yaml
       end
@@ -151,7 +162,7 @@ class MadMimiMailer < ActionMailer::Base
     def serialize(recipients)
       case recipients
       when String
-        recipients
+        recipients.blank? ? nil : recipients
       when Array
         recipients.join(", ")
       when NilClass

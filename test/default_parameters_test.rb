@@ -13,7 +13,7 @@ class TestDefaultParameters < Test::Unit::TestCase
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('from' => 'default_from@example.com'))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_default_param
   end
   
@@ -21,14 +21,14 @@ class TestDefaultParameters < Test::Unit::TestCase
     create_mailer_with_default_parameter(:from, 'default_from@example.com')
     @mailer_class.class_eval do
       def mimi_specified_param
-        from 'specified@example.com'
+        mail :from => 'specified@example.com'
       end
     end
     
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('from' => 'specified@example.com'))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_specified_param
   end
   
@@ -38,7 +38,7 @@ class TestDefaultParameters < Test::Unit::TestCase
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('bcc' => 'default_from@example.com'))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_default_param
   end
   
@@ -46,14 +46,14 @@ class TestDefaultParameters < Test::Unit::TestCase
     create_mailer_with_default_parameter(:bcc, 'specified@example.com')
     @mailer_class.class_eval do
       def mimi_specified_param
-        bcc 'specified@example.com'
+        mail :bcc => 'specified@example.com'
       end
     end
     
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('bcc' => 'specified@example.com'))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_specified_param
   end
   
@@ -64,7 +64,7 @@ class TestDefaultParameters < Test::Unit::TestCase
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('body' => body_hash.to_yaml))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_default_param
   end
   
@@ -74,14 +74,15 @@ class TestDefaultParameters < Test::Unit::TestCase
     create_mailer_with_default_parameter(:body, body_hash)
     @mailer_class.class_eval do
       def mimi_specified_param
-        body :host => 'specified.host.com'
+        @host = 'specified.host.com'
+        mail
       end
     end
     
     mock_request = mock("request")
     mock_request.expects(:set_form_data).with(has_entry('body' => expected_body_hash.to_yaml))
     @mailer_class.expects(:post_request).yields(mock_request).returns(@ok_reponse)
-
+  
     @mailer_class.deliver_mimi_specified_param
   end
   
@@ -92,6 +93,11 @@ class TestDefaultParameters < Test::Unit::TestCase
     
     @mailer_class = Class.new(MadMimiMailer) do
       def mimi_default_param
+        mail
+      end
+      
+      def self.name
+        "TestMailer"
       end
     end
   end
