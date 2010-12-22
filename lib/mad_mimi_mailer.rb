@@ -80,7 +80,7 @@ class MadMimiMailer < ActionMailer::Base
       return unless perform_deliveries
 
       if delivery_method == :test
-        deliveries << message
+        deliveries << (mail.mail ? mail.mail : mail)
       else
         if (all_recipients = mail.recipients).is_a? Array
           all_recipients.each do |recipient|
