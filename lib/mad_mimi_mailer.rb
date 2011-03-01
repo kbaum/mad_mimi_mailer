@@ -85,13 +85,11 @@ class MadMimiMailer < ActionMailer::Base
       #   mail.create!(method, *parameters)
       # end
 
-      debugger
 
       return unless perform_deliveries
 
       if delivery_method == :test
-        deliveries << message
-        #deliveries << (mail.mail ? mail.mail : mail)
+        deliveries << (mail.mail ? mail.mail : mail)
       else
         if (all_recipients = mail.recipients).is_a? Array
           all_recipients.each do |recipient|
@@ -121,8 +119,8 @@ class MadMimiMailer < ActionMailer::Base
 
       if mail.use_erb
         if message.parts.any?
-          params['raw_plain_text'] = content_for(message, "text/plain")
-          params['raw_html']       = content_for(message, "text/html") { |html| validate(html.body.to_s) }
+          params['raw_plain_text'] = content_for(message, /text\/plain/)
+          params['raw_html']       = content_for(message, /text\/html/) { |html| validate(html.body.to_s) }
         else
           validate(message.body.to_s)
           params['raw_html'] = message.body.to_s
@@ -133,6 +131,9 @@ class MadMimiMailer < ActionMailer::Base
         body_hash                = stringified_default_body.merge(stringified_mail_body)
         params['body']           = body_hash.to_yaml
       end
+
+
+
 
       response = post_request do |request|
         request.set_form_data(params)
@@ -147,7 +148,7 @@ class MadMimiMailer < ActionMailer::Base
     end
 
     def content_for(mail, content_type)
-      part = mail.parts.detect { |p| p.content_type == content_type }
+      part = mail.parts.detect { |p| p.content_type =~ content_type }
       if part
         yield(part) if block_given?
         part.body
